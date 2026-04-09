@@ -36,7 +36,7 @@ function App() {
 
   return (
     <div>
-      <h1>Order Flow APP</h1>
+      <h1>Order Flow App</h1>
 
       <button onClick={handleLogout}>Logout</button>
 

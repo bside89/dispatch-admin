@@ -7,7 +7,7 @@ interface Props {
 export default function OrderList({ orders }: Props) {
   return (
     <div>
-      <h2>Pedidos</h2>
+      <h2>Orders</h2>
 
       <ul>
         {orders.map((order) => (

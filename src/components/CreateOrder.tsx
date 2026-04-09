@@ -27,7 +27,7 @@ export default function CreateOrder({ onCreate }: Props) {
       setProduct("");
       setAmount("");
     } catch {
-      alert("Erro ao criar pedido");
+      alert("Error creating order");
     } finally {
       setLoading(false);
     }
@@ -36,19 +36,19 @@ export default function CreateOrder({ onCreate }: Props) {
   return (
     <form onSubmit={handleSubmit}>
       <input
-        placeholder="Produto"
+        placeholder="Product"
         value={product}
         onChange={(e) => setProduct(e.target.value)}
       />
 
       <input
-        placeholder="Valor"
+        placeholder="Amount"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
       />
 
       <button disabled={loading}>
-        {loading ? "Criando..." : "Criar Pedido"}
+        {loading ? "Creating..." : "Create Order"}
       </button>
     </form>
   );

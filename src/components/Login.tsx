@@ -17,7 +17,7 @@ export default function Login() {
       await login(email, password);
       loginUser();
     } catch {
-      alert("Login inválido");
+      alert("Invalid login");
     } finally {
       setLoading(false);
     }
@@ -35,12 +35,12 @@ export default function Login() {
 
       <input
         type="password"
-        placeholder="Senha"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <button disabled={loading}>{loading ? "Entrando..." : "Entrar"}</button>
+      <button disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
     </form>
   );
 }

@@ -55,7 +55,7 @@ api.interceptors.response.use(
 export const login = async (email: string, password: string) => {
   const res = await api.post("/v1/auth/login", { email, password });
 
-  const data = res.data as {
+  const data = res.data.data as {
     accessToken: string;
     refreshToken: string;
   };
@@ -67,9 +67,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const logout = async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
-
-  await api.post("/v1/auth/logout", { refreshToken });
+  await api.post("/v1/auth/logout");
 
   localStorage.clear();
 };
@@ -80,7 +78,7 @@ export const logout = async () => {
 
 export const getOrders = async () => {
   const res = await api.get("/v1/orders");
-  return res.data;
+  return res.data.data;
 };
 
 export const createOrder = async (order: {
@@ -88,7 +86,7 @@ export const createOrder = async (order: {
   amount: number;
 }) => {
   const res = await api.post("/v1/orders", order);
-  return res.data;
+  return res.data.data;
 };
 
 //#endregion
