@@ -35,9 +35,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      loginUser();
-      navigate("/orders", { replace: true });
+      const data = await login(email, password);
+      loginUser(data.userId);
+      navigate("/", { replace: true });
     } catch (err: unknown) {
       const msg =
         (err as any)?.response?.data?.message ??

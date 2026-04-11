@@ -3,7 +3,8 @@ import { tokenStorage } from "../utils/tokenStorage";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  loginUser: () => void;
+  userId: string | null;
+  loginUser: (userId: string) => void;
   logoutUser: () => void;
 }
 
@@ -13,16 +14,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!tokenStorage.getAccessToken(),
   );
+  const [userId, setUserId] = useState<string | null>(() =>
+    tokenStorage.getUserId(),
+  );
 
-  const loginUser = () => setIsAuthenticated(true);
+  const loginUser = (id: string) => {
+    setIsAuthenticated(true);
+    setUserId(id);
+  };
 
   const logoutUser = () => {
     tokenStorage.clear();
     setIsAuthenticated(false);
+    setUserId(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loginUser, logoutUser }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, userId, loginUser, logoutUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

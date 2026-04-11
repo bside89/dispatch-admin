@@ -8,6 +8,7 @@ import type {
   UpdateOrderStatusInput,
   OrderFilters,
 } from "../types/Order";
+import type { User, UpdateUserInput } from "../types/User";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL as string;
 
@@ -32,9 +33,11 @@ async function refreshTokens(): Promise<string> {
     const data = res.data.data as {
       accessToken: string;
       refreshToken: string;
+      userId: string;
     };
 
     tokenStorage.setTokens(data.accessToken, data.refreshToken);
+    tokenStorage.setUserId(data.userId);
     return data.accessToken;
   })().finally(() => {
     refreshPromise = null;
@@ -92,6 +95,7 @@ api.interceptors.response.use(
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  userId: string;
 }
 
 export async function login(
@@ -101,6 +105,7 @@ export async function login(
   const res = await api.post("/v1/auth/login", { email, password });
   const data = res.data.data as LoginResponse;
   tokenStorage.setTokens(data.accessToken, data.refreshToken);
+  tokenStorage.setUserId(data.userId);
   return data;
 }
 
@@ -155,6 +160,25 @@ export async function updateOrderStatus(
 
 export async function deleteOrder(id: string): Promise<void> {
   await api.delete(`/v1/orders/${id}`);
+}
+
+// ─── Users ──────────────────────────────────────────────────────────────────
+
+export async function getUser(userId: string): Promise<User> {
+  const res = await api.get(`/v1/users/${userId}`);
+  return res.data.data as User;
+}
+
+export async function updateUser(
+  userId: string,
+  input: UpdateUserInput,
+): Promise<User> {
+  const res = await api.patch(`/v1/users/${userId}`, input);
+  return res.data.data as User;
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  await api.delete(`/v1/users/${userId}`);
 }
 
 export default api;

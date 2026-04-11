@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import {
-  getOrders,
-  deleteOrder,
-  updateOrderStatus,
-  logout,
-} from "../services/api";
+import { getOrders, deleteOrder, updateOrderStatus } from "../services/api";
 import type {
   Order,
   OrderFilters,
@@ -29,9 +22,6 @@ type Toast = { kind: "success" | "error"; message: string } | null;
 const PAGE_SIZE = 10;
 
 export default function OrdersPage() {
-  const navigate = useNavigate();
-  const { logoutUser } = useAuth();
-
   const [orders, setOrders] = useState<Order[]>([]);
   const [meta, setMeta] = useState<OrderMeta>({
     total: 0,
@@ -72,15 +62,6 @@ export default function OrdersPage() {
   function showToast(kind: "success" | "error", message: string) {
     setToast({ kind, message });
     setTimeout(() => setToast(null), 4000);
-  }
-
-  async function handleLogout() {
-    try {
-      await logout();
-    } finally {
-      logoutUser();
-      navigate("/login", { replace: true });
-    }
   }
 
   async function handleDelete(id: string) {
@@ -137,9 +118,6 @@ export default function OrdersPage() {
             onClick={() => setModal({ type: "create" })}
           >
             New Order
-          </button>
-          <button className="btn btn-ghost" onClick={handleLogout}>
-            Logout
           </button>
         </div>
       </header>
