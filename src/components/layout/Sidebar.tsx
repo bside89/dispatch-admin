@@ -19,7 +19,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-logo">
         <span className="sidebar-logo-icon">◈</span>
-        <span>Order Flow</span>
+        <NavLink to="/" className="sidebar-logo-text">
+          <span>Order Flow App</span>
+        </NavLink>
       </div>
 
       <nav className="sidebar-nav">

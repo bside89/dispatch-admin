@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/api";
+import { getUser, login } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { loginUser } = useAuth();
+  const { loginUser, setUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +36,8 @@ export default function LoginPage() {
 
     try {
       const data = await login(email, password);
+      const user = await getUser(data.userId);
+      setUser(user);
       loginUser(data.userId);
       navigate("/", { replace: true });
     } catch (err: unknown) {
@@ -49,9 +51,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-logo">Order Flow</h1>
+    <div className="login-page p-4">
+      <div className="login-card p-4 p-md-5">
+        <h1 className="login-logo">Order Flow App</h1>
         <p className="login-subtitle">Sign in to your account</p>
 
         <form onSubmit={handleSubmit} noValidate className="login-form">
@@ -85,7 +87,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="btn btn-primary btn-full"
+            className="btn btn-primary btn-full mt-3"
             disabled={loading}
           >
             {loading ? "Signing in…" : "Sign in"}

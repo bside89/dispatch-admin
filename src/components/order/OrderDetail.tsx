@@ -22,7 +22,7 @@ export default function OrderDetail({ order, onClose }: Props) {
           </button>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body p-4">
           <div className="detail-section">
             <h3>Order Info</h3>
             <dl className="dl">
@@ -92,7 +92,7 @@ export default function OrderDetail({ order, onClose }: Props) {
           </div>
         </div>
 
-        <div className="modal-footer">
+        <div className="modal-footer p-4">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             Close
           </button>

@@ -116,7 +116,7 @@ export default function OrderForm({ order, onSuccess, onClose }: Props) {
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="modal-body">
+          <div className="modal-body p-4">
             {error && <div className="alert alert-error">{error}</div>}
 
             <div className="items-list">
@@ -179,7 +179,7 @@ export default function OrderForm({ order, onSuccess, onClose }: Props) {
 
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm mt-3"
               onClick={addItem}
               disabled={loading}
             >
@@ -187,7 +187,7 @@ export default function OrderForm({ order, onSuccess, onClose }: Props) {
             </button>
           </div>
 
-          <div className="modal-footer">
+          <div className="modal-footer p-4">
             <button
               type="button"
               className="btn btn-ghost"

@@ -108,7 +108,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page px-0">
       {/* ── Header ── */}
       <header className="page-header">
         <h1>Orders</h1>

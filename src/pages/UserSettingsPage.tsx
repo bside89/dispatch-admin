@@ -124,7 +124,7 @@ export default function UserSettingsPage() {
 
   if (loading) {
     return (
-      <div className="page">
+      <div className="page px-0">
         <header className="page-header">
           <h1>Settings</h1>
         </header>
@@ -137,7 +137,7 @@ export default function UserSettingsPage() {
 
   if (fetchError) {
     return (
-      <div className="page">
+      <div className="page px-0">
         <header className="page-header">
           <h1>Settings</h1>
         </header>
@@ -149,7 +149,7 @@ export default function UserSettingsPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page px-0">
       <header className="page-header">
         <h1>Settings</h1>
       </header>
@@ -157,7 +157,7 @@ export default function UserSettingsPage() {
       <main className="page-main">
         <form onSubmit={handleSave} noValidate>
           {/* ── Profile ── */}
-          <div className="settings-section">
+          <div className="settings-section p-4">
             <h2 className="settings-section-title">Profile</h2>
             <div className="settings-fields">
               <div className="field">
@@ -184,7 +184,7 @@ export default function UserSettingsPage() {
           </div>
 
           {/* ── Address ── */}
-          <div className="settings-section">
+          <div className="settings-section mt-3 mb-3 p-4">
             <h2 className="settings-section-title">Address</h2>
             <div className="settings-fields">
               <div className="field">
@@ -264,7 +264,7 @@ export default function UserSettingsPage() {
         </form>
 
         {/* ── Danger Zone ── */}
-        <div className="settings-section settings-danger-zone">
+        <div className="settings-section settings-danger-zone p-4">
           <h2 className="settings-section-title settings-danger-title">
             Danger Zone
           </h2>
