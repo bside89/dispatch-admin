@@ -3,12 +3,24 @@ import { tokenStorage } from "../utils/tokenStorage";
 import type {
   Order,
   OrdersListResponse,
-  CreateOrderInput,
-  UpdateOrderInput,
   UpdateOrderStatusInput,
+  ShipOrderInput,
   OrderFilters,
 } from "../types/Order";
-import type { User, UpdateUserInput } from "../types/User";
+import type {
+  User,
+  UsersListResponse,
+  CreateUserInput,
+  UpdateUserInput,
+  UserFilters,
+} from "../types/User";
+import type {
+  Item,
+  ItemsListResponse,
+  CreateItemInput,
+  UpdateItemInput,
+  ItemFilters,
+} from "../types/Item";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL as string;
 
@@ -82,8 +94,7 @@ api.interceptors.response.use(
     }
 
     if (status === 403) {
-      tokenStorage.clear();
-      window.location.href = "/login";
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
@@ -122,31 +133,15 @@ export async function logout(): Promise<void> {
 export async function getOrders(
   filters?: OrderFilters,
 ): Promise<OrdersListResponse> {
-  const res = await api.get("/v1/orders", { params: filters });
+  const res = await api.get("/v1/admin/orders", { params: filters });
   return {
-    data: res.data.data as Order[],
+    data: res.data.items as Order[],
     meta: res.data.meta,
   };
 }
 
 export async function getOrderById(id: string): Promise<Order> {
-  const res = await api.get(`/v1/orders/${id}`);
-  return res.data.data as Order;
-}
-
-export async function createOrder(input: CreateOrderInput): Promise<Order> {
-  const idempotencyKey = crypto.randomUUID();
-  const res = await api.post("/v1/orders", input, {
-    headers: { "idempotency-key": idempotencyKey },
-  });
-  return res.data.data as Order;
-}
-
-export async function updateOrder(
-  id: string,
-  input: UpdateOrderInput,
-): Promise<Order> {
-  const res = await api.patch(`/v1/orders/${id}`, input);
+  const res = await api.get(`/v1/admin/orders/${id}`);
   return res.data.data as Order;
 }
 
@@ -154,18 +149,57 @@ export async function updateOrderStatus(
   id: string,
   input: UpdateOrderStatusInput,
 ): Promise<Order> {
-  const res = await api.patch(`/v1/orders/${id}/status`, input);
+  const res = await api.patch(`/v1/admin/orders/${id}`, input);
   return res.data.data as Order;
 }
 
 export async function deleteOrder(id: string): Promise<void> {
-  await api.delete(`/v1/orders/${id}`);
+  await api.delete(`/v1/admin/orders/${id}`);
+}
+
+export async function shipOrder(
+  id: string,
+  input?: ShipOrderInput,
+): Promise<Order> {
+  const res = await api.patch(`/v1/admin/orders/${id}/ship`, input ?? {});
+  return res.data.data as Order;
+}
+
+export async function deliverOrder(id: string): Promise<Order> {
+  const res = await api.patch(`/v1/admin/orders/${id}/deliver`, {});
+  return res.data.data as Order;
+}
+
+export async function cancelOrder(id: string): Promise<void> {
+  await api.patch(`/v1/admin/orders/${id}/cancel`, {});
+}
+
+export async function refundOrder(id: string): Promise<void> {
+  await api.patch(`/v1/admin/orders/${id}/refund`, {});
 }
 
 // ─── Users ──────────────────────────────────────────────────────────────────
 
+export async function getUsers(
+  filters?: UserFilters,
+): Promise<UsersListResponse> {
+  const res = await api.get("/v1/admin/users", { params: filters });
+  return {
+    data: res.data.items as User[],
+    meta: res.data.meta,
+  };
+}
+
 export async function getUser(userId: string): Promise<User> {
-  const res = await api.get(`/v1/users/${userId}`);
+  const res = await api.get(`/v1/admin/users/${userId}`);
+  return res.data.data as User;
+}
+
+export async function createUser(input: CreateUserInput): Promise<User> {
+  const idempotencyKey = crypto.randomUUID();
+  const res = await api.post("/v1/admin/users", input, {
+    headers: { "idempotency-key": idempotencyKey },
+  });
   return res.data.data as User;
 }
 
@@ -173,12 +207,49 @@ export async function updateUser(
   userId: string,
   input: UpdateUserInput,
 ): Promise<User> {
-  const res = await api.patch(`/v1/users/${userId}`, input);
+  const res = await api.patch(`/v1/admin/users/${userId}`, input);
   return res.data.data as User;
 }
 
 export async function deleteUser(userId: string): Promise<void> {
-  await api.delete(`/v1/users/${userId}`);
+  await api.delete(`/v1/admin/users/${userId}`);
+}
+
+// ─── Items ──────────────────────────────────────────────────────────────────
+
+export async function getItems(
+  filters?: ItemFilters,
+): Promise<ItemsListResponse> {
+  const res = await api.get("/v1/admin/items", { params: filters });
+  return {
+    data: res.data.items as Item[],
+    meta: res.data.meta,
+  };
+}
+
+export async function getItemById(id: string): Promise<Item> {
+  const res = await api.get(`/v1/admin/items/${id}`);
+  return res.data.data as Item;
+}
+
+export async function createItem(input: CreateItemInput): Promise<Item> {
+  const idempotencyKey = crypto.randomUUID();
+  const res = await api.post("/v1/admin/items", input, {
+    headers: { "idempotency-key": idempotencyKey },
+  });
+  return res.data.data as Item;
+}
+
+export async function updateItem(
+  id: string,
+  input: UpdateItemInput,
+): Promise<Item> {
+  const res = await api.patch(`/v1/admin/items/${id}`, input);
+  return res.data.data as Item;
+}
+
+export async function deleteItem(id: string): Promise<void> {
+  await api.delete(`/v1/admin/items/${id}`);
 }
 
 export default api;

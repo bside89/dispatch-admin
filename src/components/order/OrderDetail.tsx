@@ -44,6 +44,45 @@ export default function OrderDetail({ order, onClose }: Props) {
 
               <dt>Updated</dt>
               <dd>{formatDate(order.updatedAt)}</dd>
+
+              {order.trackingNumber && (
+                <>
+                  <dt>Tracking #</dt>
+                  <dd className="mono">{order.trackingNumber}</dd>
+                </>
+              )}
+
+              {order.carrier && (
+                <>
+                  <dt>Carrier</dt>
+                  <dd>{order.carrier}</dd>
+                </>
+              )}
+
+              {order.shippedAt && (
+                <>
+                  <dt>Shipped At</dt>
+                  <dd>{formatDate(order.shippedAt)}</dd>
+                </>
+              )}
+
+              {order.deliveredAt && (
+                <>
+                  <dt>Delivered At</dt>
+                  <dd>{formatDate(order.deliveredAt)}</dd>
+                </>
+              )}
+            </dl>
+          </div>
+
+          <div className="detail-section">
+            <h3>Payment</h3>
+            <dl className="dl">
+              <dt>Payment ID</dt>
+              <dd className="mono">{order.paymentData.id}</dd>
+
+              <dt>Payment Status</dt>
+              <dd>{order.paymentData.status}</dd>
             </dl>
           </div>
 
@@ -57,6 +96,9 @@ export default function OrderDetail({ order, onClose }: Props) {
                 <dt>Email</dt>
                 <dd>{order.user.email}</dd>
 
+                <dt>Role</dt>
+                <dd>{order.user.role}</dd>
+
                 <dt>User ID</dt>
                 <dd className="mono">{order.user.id}</dd>
               </dl>
@@ -67,28 +109,44 @@ export default function OrderDetail({ order, onClose }: Props) {
 
           <div className="detail-section">
             <h3>Items</h3>
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Product ID</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.items.map((item) => (
-                    <tr key={item.id}>
-                      <td className="td-mono">{item.productId}</td>
-                      <td>{item.quantity}</td>
-                      <td>{formatCents(item.price)}</td>
-                      <td>{formatCents(item.price * item.quantity)}</td>
+            {order.items && order.items.length > 0 ? (
+              <div className="table-wrapper">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Subtotal</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {order.items.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          {item.item?.name ?? (
+                            <span className="td-mono">
+                              {item.itemId.slice(0, 8)}…
+                            </span>
+                          )}
+                        </td>
+                        <td>{item.quantity}</td>
+                        <td>
+                          {item.item ? formatCents(item.item.price) : "—"}
+                        </td>
+                        <td>
+                          {item.item
+                            ? formatCents(item.item.price * item.quantity)
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="empty-inline">No items available.</p>
+            )}
           </div>
         </div>
 

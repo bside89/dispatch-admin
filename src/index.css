@@ -837,3 +837,174 @@ select:disabled {
   font-size: 13px;
   color: var(--text);
 }
+
+/* ─── Dashboard cards ───────────────────────────────────────── */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.dashboard-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg);
+}
+
+.dashboard-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.dashboard-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  line-height: 1;
+}
+
+.dashboard-card-pending {
+  border-left: 3px solid #eab308;
+}
+.dashboard-card-paid {
+  border-left: 3px solid #16a34a;
+}
+.dashboard-card-processed {
+  border-left: 3px solid #3b82f6;
+}
+.dashboard-card-shipped {
+  border-left: 3px solid #6366f1;
+}
+.dashboard-card-delivered {
+  border-left: 3px solid #10b981;
+}
+.dashboard-card-canceled {
+  border-left: 3px solid #ef4444;
+}
+.dashboard-card-refunded {
+  border-left: 3px solid #6b7280;
+}
+
+/* ─── Updated/new badge variants ────────────────────────────── */
+.badge-processed {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+.badge-canceled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+/* Role badges */
+.badge-role-superadmin {
+  background: rgba(170, 59, 255, 0.15);
+  color: #7c3aed;
+}
+.badge-role-admin {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+.badge-role-financial {
+  background: rgba(22, 163, 74, 0.15);
+  color: #15803d;
+}
+.badge-role-shipper {
+  background: rgba(99, 102, 241, 0.15);
+  color: #4338ca;
+}
+.badge-role-delivery {
+  background: rgba(16, 185, 129, 0.15);
+  color: #065f46;
+}
+.badge-role-user {
+  background: rgba(107, 114, 128, 0.15);
+  color: #374151;
+}
+
+/* ─── Field helpers ─────────────────────────────────────────── */
+.fields-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.fields-row .field {
+  flex: 1;
+  min-width: 140px;
+}
+
+textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.req {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.form-hint {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+.mt-3 {
+  margin-top: 12px;
+}
+.mb-2 {
+  margin-bottom: 8px;
+}
+.mb-3 {
+  margin-bottom: 12px;
+}
+
+.text-muted {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.d-block {
+  display: block;
+}
+
+/* ─── State left ────────────────────────────────────────────── */
+.state-left {
+  text-align: left;
+  padding: 8px 0;
+  color: var(--text);
+}
+
+.empty-inline {
+  color: var(--text);
+  font-size: 14px;
+  font-style: italic;
+}

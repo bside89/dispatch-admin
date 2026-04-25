@@ -1,10 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { logout } from "../../services/api";
+import { canManageAdmin, canAccessFinancial } from "../../utils/permissions";
+import type { UserRole } from "../../types/User";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { logoutUser } = useAuth();
+  const { logoutUser, user } = useAuth();
+  const role = user?.role as UserRole | undefined;
 
   async function handleLogout() {
     try {
@@ -20,20 +23,46 @@ export default function Sidebar() {
       <div className="sidebar-logo">
         <span className="sidebar-logo-icon">◈</span>
         <NavLink to="/" className="sidebar-logo-text">
-          <span>Order Flow App</span>
+          <span>Dispatch Admin</span>
         </NavLink>
       </div>
 
       <nav className="sidebar-nav">
-        <NavLink
-          to="/orders"
-          className={({ isActive }) =>
-            `sidebar-nav-item${isActive ? " active" : ""}`
-          }
-        >
-          <span className="sidebar-nav-icon">≡</span>
-          Orders
-        </NavLink>
+        {canAccessFinancial(role) && (
+          <NavLink
+            to="/orders"
+            className={({ isActive }) =>
+              `sidebar-nav-item${isActive ? " active" : ""}`
+            }
+          >
+            <span className="sidebar-nav-icon">≡</span>
+            Orders
+          </NavLink>
+        )}
+
+        {canManageAdmin(role) && (
+          <NavLink
+            to="/items"
+            className={({ isActive }) =>
+              `sidebar-nav-item${isActive ? " active" : ""}`
+            }
+          >
+            <span className="sidebar-nav-icon">◻</span>
+            Items
+          </NavLink>
+        )}
+
+        {canManageAdmin(role) && (
+          <NavLink
+            to="/users"
+            className={({ isActive }) =>
+              `sidebar-nav-item${isActive ? " active" : ""}`
+            }
+          >
+            <span className="sidebar-nav-icon">◎</span>
+            Users
+          </NavLink>
+        )}
       </nav>
 
       <div className="sidebar-bottom">

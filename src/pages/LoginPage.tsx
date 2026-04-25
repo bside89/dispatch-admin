@@ -53,7 +53,7 @@ export default function LoginPage() {
   return (
     <div className="login-page p-4">
       <div className="login-card p-4 p-md-5">
-        <h1 className="login-logo">Order Flow App</h1>
+        <h1 className="login-logo">Dispatch Admin</h1>
         <p className="login-subtitle">Sign in to your account</p>
 
         <form onSubmit={handleSubmit} noValidate className="login-form">

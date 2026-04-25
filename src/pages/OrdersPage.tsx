@@ -1,27 +1,48 @@
-import { useState, useEffect, useCallback } from "react";
-import { getOrders, deleteOrder, updateOrderStatus } from "../services/api";
+import { useState, useEffect, useCallback, type FormEvent } from "react";
+import {
+  getOrders,
+  deleteOrder,
+  shipOrder,
+  deliverOrder,
+  cancelOrder,
+  refundOrder,
+} from "../services/api";
 import type {
   Order,
   OrderFilters,
   OrderMeta,
   OrderStatus,
+  ShipOrderInput,
 } from "../types/Order";
 import { ORDER_STATUSES } from "../types/Order";
-import OrderForm from "../components/order/OrderForm";
 import OrderDetail from "../components/order/OrderDetail";
 import { formatCents, formatDate } from "../utils/format";
+import { useAuth } from "../context/AuthContext";
+import {
+  canManageOrders,
+  canAccessFinancial,
+  canShipOrders,
+  canDeliverOrders,
+} from "../utils/permissions";
+import type { UserRole } from "../types/User";
 
-type Modal =
-  | { type: "create" }
-  | { type: "edit"; order: Order }
+type ActionModal =
   | { type: "detail"; order: Order }
+  | { type: "ship"; order: Order }
+  | { type: "confirm"; action: "deliver" | "cancel" | "refund"; order: Order }
   | null;
 
 type Toast = { kind: "success" | "error"; message: string } | null;
 
 const PAGE_SIZE = 10;
 
+const CANCELABLE: OrderStatus[] = ["PENDING", "PAID", "PROCESSED"];
+const REFUNDABLE: OrderStatus[] = ["PAID", "PROCESSED", "SHIPPED", "DELIVERED"];
+
 export default function OrdersPage() {
+  const { user } = useAuth();
+  const role = user?.role as UserRole | undefined;
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [meta, setMeta] = useState<OrderMeta>({
     total: 0,
@@ -36,10 +57,14 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [modal, setModal] = useState<Modal>(null);
+  const [modal, setModal] = useState<ActionModal>(null);
   const [toast, setToast] = useState<Toast>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Ship form state
+  const [shipTracking, setShipTracking] = useState("");
+  const [shipCarrier, setShipCarrier] = useState("");
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -65,11 +90,10 @@ export default function OrdersPage() {
   }
 
   async function handleDelete(id: string) {
-    setDeletingId(id);
+    setActionLoading(true);
     try {
       await deleteOrder(id);
       showToast("success", "Order deleted.");
-      // Go to previous page if we deleted the last item on a non-first page
       if (orders.length === 1 && (filters.page ?? 1) > 1) {
         setFilters((f) => ({ ...f, page: (f.page ?? 1) - 1 }));
       } else {
@@ -78,21 +102,60 @@ export default function OrdersPage() {
     } catch {
       showToast("error", "Failed to delete order.");
     } finally {
-      setDeletingId(null);
+      setActionLoading(false);
       setConfirmDeleteId(null);
     }
   }
 
-  async function handleStatusChange(id: string, status: OrderStatus) {
-    // Optimistic update
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+  async function handleShip(e: FormEvent) {
+    e.preventDefault();
+    if (modal?.type !== "ship") return;
+    const id = modal.order.id;
+    setActionLoading(true);
     try {
-      const updated = await updateOrderStatus(id, { status });
-      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+      const input: ShipOrderInput = {
+        trackingNumber: shipTracking || undefined,
+        carrier: shipCarrier || undefined,
+      };
+      await shipOrder(id, input);
+      showToast("success", "Order marked as shipped.");
+      setModal(null);
+      loadOrders();
     } catch {
-      showToast("error", "Failed to update status.");
-      loadOrders(); // revert by reloading
+      showToast("error", "Failed to ship order.");
+    } finally {
+      setActionLoading(false);
     }
+  }
+
+  async function handleConfirmAction() {
+    if (modal?.type !== "confirm") return;
+    const { action, order } = modal;
+    setActionLoading(true);
+    try {
+      if (action === "deliver") {
+        await deliverOrder(order.id);
+        showToast("success", "Order marked as delivered.");
+      } else if (action === "cancel") {
+        await cancelOrder(order.id);
+        showToast("success", "Cancellation enqueued.");
+      } else if (action === "refund") {
+        await refundOrder(order.id);
+        showToast("success", "Refund enqueued.");
+      }
+      setModal(null);
+      loadOrders();
+    } catch {
+      showToast("error", `Failed to ${action} order.`);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function openShip(order: Order) {
+    setShipTracking("");
+    setShipCarrier("");
+    setModal({ type: "ship", order });
   }
 
   function applyFilter(key: keyof OrderFilters, value: string) {
@@ -107,19 +170,25 @@ export default function OrdersPage() {
     setFilters({ page: 1, limit: PAGE_SIZE });
   }
 
+  const confirmActionLabel =
+    modal?.type === "confirm"
+      ? modal.action === "deliver"
+        ? "Mark as Delivered"
+        : modal.action === "cancel"
+          ? "Cancel Order"
+          : "Refund Order"
+      : "";
+
   return (
     <div className="page px-0">
+      {/* ── Toast ── */}
+      {toast && (
+        <div className={`toast toast-${toast.kind}`}>{toast.message}</div>
+      )}
+
       {/* ── Header ── */}
       <header className="page-header">
         <h1>Orders</h1>
-        <div className="header-actions">
-          <button
-            className="btn btn-primary"
-            onClick={() => setModal({ type: "create" })}
-          >
-            New Order
-          </button>
-        </div>
       </header>
 
       <main className="page-main">
@@ -193,7 +262,6 @@ export default function OrdersPage() {
                   <th>Total</th>
                   <th>User</th>
                   <th>Created</th>
-                  <th>Updated</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -207,22 +275,11 @@ export default function OrdersPage() {
                     </td>
 
                     <td>
-                      <select
-                        className={`status-badge-select status-badge-${order.status.toLowerCase()}`}
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            order.id,
-                            e.target.value as OrderStatus,
-                          )
-                        }
+                      <span
+                        className={`badge badge-${order.status.toLowerCase()}`}
                       >
-                        {ORDER_STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
+                        {order.status}
+                      </span>
                     </td>
 
                     <td>{formatCents(order.total)}</td>
@@ -230,7 +287,6 @@ export default function OrdersPage() {
                       {order.user ? order.user.name || order.user.email : "—"}
                     </td>
                     <td>{formatDate(order.createdAt)}</td>
-                    <td>{formatDate(order.updatedAt)}</td>
 
                     <td>
                       <div className="row-actions">
@@ -241,38 +297,91 @@ export default function OrdersPage() {
                           View
                         </button>
 
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => setModal({ type: "edit", order })}
-                        >
-                          Edit
-                        </button>
-
-                        {confirmDeleteId === order.id ? (
-                          <>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              disabled={deletingId === order.id}
-                              onClick={() => handleDelete(order.id)}
-                            >
-                              {deletingId === order.id
-                                ? "Deleting…"
-                                : "Confirm"}
-                            </button>
+                        {order.status === "PROCESSED" &&
+                          canShipOrders(role) && (
                             <button
                               className="btn btn-ghost btn-sm"
-                              onClick={() => setConfirmDeleteId(null)}
+                              onClick={() => openShip(order)}
+                            >
+                              Ship
+                            </button>
+                          )}
+
+                        {order.status === "SHIPPED" &&
+                          canDeliverOrders(role) && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() =>
+                                setModal({
+                                  type: "confirm",
+                                  action: "deliver",
+                                  order,
+                                })
+                              }
+                            >
+                              Deliver
+                            </button>
+                          )}
+
+                        {CANCELABLE.includes(order.status) &&
+                          canAccessFinancial(role) && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() =>
+                                setModal({
+                                  type: "confirm",
+                                  action: "cancel",
+                                  order,
+                                })
+                              }
                             >
                               Cancel
                             </button>
+                          )}
+
+                        {REFUNDABLE.includes(order.status) &&
+                          canAccessFinancial(role) && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              onClick={() =>
+                                setModal({
+                                  type: "confirm",
+                                  action: "refund",
+                                  order,
+                                })
+                              }
+                            >
+                              Refund
+                            </button>
+                          )}
+
+                        {canManageOrders(role) && (
+                          <>
+                            {confirmDeleteId === order.id ? (
+                              <>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  disabled={actionLoading}
+                                  onClick={() => handleDelete(order.id)}
+                                >
+                                  {actionLoading ? "…" : "Confirm"}
+                                </button>
+                                <button
+                                  className="btn btn-ghost btn-sm"
+                                  onClick={() => setConfirmDeleteId(null)}
+                                >
+                                  ×
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => setConfirmDeleteId(order.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
                           </>
-                        ) : (
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => setConfirmDeleteId(order.id)}
-                          >
-                            Delete
-                          </button>
                         )}
                       </div>
                     </td>
@@ -313,37 +422,122 @@ export default function OrdersPage() {
         )}
       </main>
 
-      {/* ── Modals ── */}
+      {/* ── Order Detail Modal ── */}
       {modal?.type === "detail" && (
         <OrderDetail order={modal.order} onClose={() => setModal(null)} />
       )}
 
-      {modal?.type === "create" && (
-        <OrderForm
-          onSuccess={() => {
-            setModal(null);
-            showToast("success", "Order created successfully.");
-            loadOrders();
-          }}
-          onClose={() => setModal(null)}
-        />
+      {/* ── Ship Modal ── */}
+      {modal?.type === "ship" && (
+        <div className="modal-overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Ship Order</h2>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setModal(null)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleShip}>
+              <div className="modal-body p-4">
+                <div className="field">
+                  <label htmlFor="ship-tracking">Tracking Number</label>
+                  <input
+                    id="ship-tracking"
+                    type="text"
+                    value={shipTracking}
+                    onChange={(e) => setShipTracking(e.target.value)}
+                    disabled={actionLoading}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="ship-carrier">Carrier</label>
+                  <input
+                    id="ship-carrier"
+                    type="text"
+                    value={shipCarrier}
+                    onChange={(e) => setShipCarrier(e.target.value)}
+                    disabled={actionLoading}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer p-4">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setModal(null)}
+                  disabled={actionLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Shipping…" : "Mark as Shipped"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      {modal?.type === "edit" && (
-        <OrderForm
-          order={modal.order}
-          onSuccess={() => {
-            setModal(null);
-            showToast("success", "Order updated successfully.");
-            loadOrders();
-          }}
-          onClose={() => setModal(null)}
-        />
-      )}
-
-      {/* ── Toast ── */}
-      {toast && (
-        <div className={`toast toast-${toast.kind}`}>{toast.message}</div>
+      {/* ── Confirm Action Modal ── */}
+      {modal?.type === "confirm" && (
+        <div className="modal-overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{confirmActionLabel}</h2>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setModal(null)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body p-4">
+              <p>
+                Are you sure you want to <strong>{modal.action}</strong> order{" "}
+                <span className="mono">{modal.order.id.slice(0, 8)}…</span>?
+                {(modal.action === "cancel" || modal.action === "refund") && (
+                  <span className="text-muted d-block mt-2">
+                    This action will be processed asynchronously.
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="modal-footer p-4">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setModal(null)}
+                disabled={actionLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className={
+                  modal.action === "deliver"
+                    ? "btn btn-primary"
+                    : "btn btn-danger"
+                }
+                disabled={actionLoading}
+                onClick={handleConfirmAction}
+              >
+                {actionLoading ? "Processing…" : confirmActionLabel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

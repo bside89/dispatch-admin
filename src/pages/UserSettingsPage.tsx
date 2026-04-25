@@ -17,6 +17,10 @@ export default function UserSettingsPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
+  // Password fields
+  const [newPassword, setNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+
   // Address fields
   const [line1, setLine1] = useState("");
   const [line2, setLine2] = useState("");
@@ -63,6 +67,15 @@ export default function UserSettingsPage() {
     e.preventDefault();
     if (!userId) return;
 
+    if (newPassword && newPassword.length < 6) {
+      setSaveError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword && !currentPassword) {
+      setSaveError("Current password is required to set a new password.");
+      return;
+    }
+
     setSaving(true);
     setSaveError(null);
 
@@ -70,6 +83,11 @@ export default function UserSettingsPage() {
       name: name || undefined,
       email: email || undefined,
     };
+
+    if (newPassword) {
+      dto.password = newPassword;
+      dto.currentPassword = currentPassword;
+    }
 
     const addressValues = { city, country, line1, line2, postalCode, state };
     if (Object.values(addressValues).some(Boolean)) {
@@ -93,6 +111,8 @@ export default function UserSettingsPage() {
       setState(updated.address?.state ?? "");
       setPostalCode(updated.address?.postalCode ?? "");
       setCountry(updated.address?.country ?? "");
+      setNewPassword("");
+      setCurrentPassword("");
       showToast("success", "Settings saved.");
     } catch (err: unknown) {
       const raw = (err as { response?: { data?: { message?: unknown } } })
@@ -180,6 +200,43 @@ export default function UserSettingsPage() {
                   disabled={saving}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* ── Change Password ── */}
+          <div className="settings-section mt-3 p-4">
+            <h2 className="settings-section-title">Change Password</h2>
+            <p className="form-hint mb-2">
+              Leave blank to keep the current password.
+            </p>
+            <div className="settings-fields">
+              <div className="field">
+                <label htmlFor="settings-new-password">New Password</label>
+                <input
+                  id="settings-new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={saving}
+                  minLength={6}
+                  autoComplete="new-password"
+                />
+              </div>
+              {newPassword && (
+                <div className="field">
+                  <label htmlFor="settings-current-password">
+                    Current Password <span className="req">*</span>
+                  </label>
+                  <input
+                    id="settings-current-password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    disabled={saving}
+                    autoComplete="current-password"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

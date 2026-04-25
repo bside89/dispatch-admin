@@ -1,19 +1,19 @@
 export type OrderStatus =
   | "PENDING"
-  | "CONFIRMED"
   | "PAID"
+  | "PROCESSED"
   | "SHIPPED"
   | "DELIVERED"
-  | "CANCELLED"
+  | "CANCELED"
   | "REFUNDED";
 
 export const ORDER_STATUSES: OrderStatus[] = [
   "PENDING",
-  "CONFIRMED",
   "PAID",
+  "PROCESSED",
   "SHIPPED",
   "DELIVERED",
-  "CANCELLED",
+  "CANCELED",
   "REFUNDED",
 ];
 
@@ -21,6 +21,19 @@ export interface OrderUser {
   id: string;
   name: string;
   email: string;
+  role: string;
+  language: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItemDetail {
+  id: string;
+  name: string;
+  description: string;
+  stock: number;
+  price: number;
+  pricePaymentId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,21 +41,30 @@ export interface OrderUser {
 export interface OrderItem {
   id: string;
   orderId: string;
-  productId: string;
+  itemId: string;
   quantity: number;
-  price: number;
-  createdAt: string;
-  updatedAt: string;
+  item?: OrderItemDetail;
+}
+
+export interface PaymentData {
+  id: string;
+  status: string;
+  clientSecret?: string;
 }
 
 export interface Order {
   id: string;
-  user: OrderUser;
   status: OrderStatus;
   total: number;
   createdAt: string;
   updatedAt: string;
-  items: OrderItem[];
+  user?: OrderUser;
+  items?: OrderItem[];
+  paymentData: PaymentData;
+  trackingNumber?: string;
+  carrier?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
 }
 
 export interface OrderMeta {
@@ -57,22 +79,13 @@ export interface OrdersListResponse {
   meta: OrderMeta;
 }
 
-export interface OrderItemInput {
-  productId: string;
-  quantity: number;
-  price: number;
-}
-
-export interface CreateOrderInput {
-  items: OrderItemInput[];
-}
-
-export interface UpdateOrderInput {
-  items?: OrderItemInput[];
-}
-
 export interface UpdateOrderStatusInput {
   status: OrderStatus;
+}
+
+export interface ShipOrderInput {
+  trackingNumber?: string;
+  carrier?: string;
 }
 
 export interface OrderFilters {
